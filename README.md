@@ -49,32 +49,32 @@
       <img src="https://github.com/leeyunseok110.png" width="100px" style="border-radius: 50%;" />
     </td>
     <td align="center"><b>이윤석</b></td>
-    <td align="center">학번</td>
+    <td align="center">20242523</td>
     <td>
       • <b>Role:</b> AI Prompt Engineer<br>
-      • <b>GitHub:</b> <a href="#">Link</a>
+      • <b>GitHub:</b> <a href="https://github.com/leeyunseok110/2026-Capstone">@leeyunseok110</a>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="https://via.placeholder.com/100" width="100px" style="border-radius: 50%;" />
+      <img src="https://github.com/jojeongin313.png" width="100px" style="border-radius: 50%;" />
     </td>
     <td align="center"><b>조정인</b></td>
-    <td align="center">학번</td>
+    <td align="center">20242522</td>
     <td>
       • <b>Role:</b> Backend Developer / Data Analysis<br>
-      • <b>GitHub:</b> <a href="#">Link</a>
+      • <b>GitHub:</b> <a href="https://github.com/jojeongin313/2026-Capstone">@jojeongin313</a>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="https://via.placeholder.com/100" width="100px" style="border-radius: 50%;" />
+      <img src="https://github.com/pcw11.png" width="100px" style="border-radius: 50%;" />
     </td>
     <td align="center"><b>박채원</b></td>
-    <td align="center">학번</td>
+    <td align="center">20241487</td>
     <td>
       • <b>Role:</b> QA / Documentation<br>
-      • <b>GitHub:</b> <a href="#">Link</a>
+      • <b>GitHub:</b> <a href="https://github.com/pcw11/2026-capstone">@pcw11</a>
     </td>
   </tr>
 </table>
