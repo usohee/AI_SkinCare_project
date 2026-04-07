@@ -7,6 +7,8 @@
 **Mirror Me**는 고가의 전문 진단 기기 없이 스마트폰 사진 한 장으로 정밀한 피부 상태를 파악하는 AI 기반 헬스케어 서비스입니다.  
 단순한 진단을 넘어, 사용자가 보유한 화장품과의 적합성을 판별하고 최적의 스킨케어 루틴을 제안하여 정보의 비대칭성과 경제적 부담을 해결합니다. 
 
+
+
 ### 🎯 프로젝트 핵심 목표
 - **접근성 제고**: 스마트폰/웹캠을 통한 정밀 진단 환경 구축 
 - **객관적 지표 제공**: 여드름, 모공, 홍조, 피지 반사 등 4가지 지표 수치화 
@@ -37,7 +39,7 @@
 - **AI/Analysis**: Python, OpenCV, YOLOv8, Roboflow 
 - **LLM**: ChatGPT, Claude, GitHub Copilot 
 - **Database**: 공공데이터포털 API, 전성분 크롤링 DB 
-- **Design**: Figma 
+- **Design**: Figma, Android Studio 
 
 ---
 
@@ -109,3 +111,4 @@
 <a href="https://www.notion.so/Capstone_project-31fac7b4a84b80bdb95bed53b1432ed3">
 <img src="https://img.shields.io/badge/Notion%20Portfolio-332b24?style=for-the-badge&logo=notion&logoColor=ffe5ed"> 
 </a>
+
