@@ -6,10 +6,10 @@
 ## 🤝 팀원 소개
 <table>
   <tr>
-    <td align="center" width="150px"><b>프로필</b></td>
+    <td align="center" width="100px"><b>프로필</b></td>
     <td align="center" width="100px"><b>성명</b></td>
-    <td align="center" width="150px"><b>학번</b></td>
-    <td align="center" width="400px"><b>역할 및 링크</b></td>
+    <td align="center" width="50px"><b>학번</b></td>
+    <td align="center" width="350px"><b>역할 및 링크</b></td>
   </tr>
   <tr>
     <td align="center">
