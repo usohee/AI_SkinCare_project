@@ -1,0 +1,1 @@
+{"info": {"filename": "0885_03_F.jpg", "id": "0885", "gender": "M", "age": 25, "date": "2023-10-05", "skin_type": 4, "sensitive": 1}, "images": {"device": 2, "width": 2736, "height": 3648, "angle": 0, "facepart": 7, "bbox": [1024, 2177, 1800, 2545]}, "annotations": {"lip_dryness": 2}, "equipment": null}

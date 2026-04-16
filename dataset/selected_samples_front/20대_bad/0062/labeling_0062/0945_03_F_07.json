@@ -1,0 +1,1 @@
+{"info": {"filename": "0945_03_F.jpg", "id": "0945", "gender": "M", "age": 28, "date": "2023-10-10", "skin_type": 5, "sensitive": 1}, "images": {"device": 2, "width": 1980, "height": 2640, "angle": 0, "facepart": 7, "bbox": [896, 1618, 1353, 1905]}, "annotations": {"lip_dryness": 3}, "equipment": null}

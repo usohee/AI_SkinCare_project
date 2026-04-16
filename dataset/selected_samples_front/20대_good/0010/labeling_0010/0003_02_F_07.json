@@ -1,0 +1,1 @@
+{"info": {"filename": "0003_02_F.jpg", "id": "0003", "gender": "F", "age": 24, "date": "2023-07-27", "skin_type": 0, "sensitive": 0}, "images": {"device": 1, "width": 2448, "height": 3264, "angle": 0, "facepart": 7, "bbox": [1016, 2080, 1538, 2273]}, "annotations": {"lip_dryness": 3}, "equipment": null}
