@@ -1,0 +1,86 @@
+{
+  "success": true,
+  "report": {
+    "summary": "종합 점수는 72점입니다. 종합 점수는 높을수록 양호한 방향입니다. 이번 분석에서는 모공 항목의 감점이 상대적으로 큽니다. 이는 질환의 중증도나 실제 문제 크기 순위가 아닙니다.",
+    "indicators": {
+      "acne": "여드름 관련 감점은 35점입니다. 개별 점수는 높을수록 감점이 큽니다.",
+      "pigmentation": "색소침착 관련 감점은 20점입니다. 개별 점수는 높을수록 감점이 큽니다.",
+      "pore": "모공 관련 감점은 40점입니다. 개별 점수는 높을수록 감점이 큽니다.",
+      "sebum": "피지 반사 관련 감점은 17점입니다. 개별 점수는 높을수록 감점이 큽니다."
+    },
+    "care_tips": [
+      "피부 상태에 맞는 관리 방법이 궁금하다면 피부과 전문의와 상담하고, 임의의 자가 관리는 피하세요.",
+      "세안할 때 순한 세정제를 손끝으로 부드럽게 사용하고, 거친 도구로 문지르지 마세요.",
+      "모공을 세게 짜거나 문지르지 말고, 미지근한 물로 부드럽게 세안하세요.",
+      "세안 후에는 보습제를 사용하세요. 유분이 느껴진다는 이유만으로 보습을 생략하지 마세요.",
+      "자외선차단제의 기능성화장품 표시와 사용법을 확인하고, 외출 전에 충분히 바르며 모자나 긴소매 옷도 함께 활용하세요."
+    ],
+    "caution": "본 결과는 이미지 기반 참고 정보이며 의학적 진단을 대체하지 않습니다. 촬영 환경과 알고리즘의 한계에 따라 결과가 달라질 수 있습니다."
+  },
+  "metadata": {
+    "source": "fallback",
+    "llm_success": false,
+    "llm_attempted": false,
+    "model": null,
+    "prompt_version": "1.0.0",
+    "knowledge_version": "2026-09-25.2",
+    "warnings": [],
+    "fallback_reason": "OFFLINE_MODE",
+    "sources": [
+      {
+        "id": "akd_professional_guidance",
+        "title": "피부 고민 해결! — 피부과 전문의에게 진료를 받아야 하는 이유",
+        "publisher": "대한피부과의사회",
+        "url": "https://akd.or.kr/dermatologist/why",
+        "published_or_updated": null,
+        "checked_at": "2026-09-25",
+        "evidence": "원문의 ‘체계적이고 전문적인 진단’은 비슷해 보이는 피부 질환의 정확한 진단을, ‘맞춤형 치료와 관리’는 잘못된 자가 관리 대신 전문가 지도를 강조한다.",
+        "guidance": "피부 상태에 맞는 관리 방법이 궁금하다면 피부과 전문의와 상담하고, 임의의 자가 관리는 피하세요."
+      },
+      {
+        "id": "aad_acne_gentle",
+        "title": "Acne: Tips for managing",
+        "publisher": "American Academy of Dermatology (AAD)",
+        "url": "https://www.aad.org/public/diseases/acne/skin-care/tips",
+        "published_or_updated": null,
+        "checked_at": "2026-09-25",
+        "evidence": "순한 세정제와 손끝으로 부드럽게 씻고, 거친 도구로 문질러 자극하는 행동을 피하도록 안내한다.",
+        "guidance": "세안할 때 순한 세정제를 손끝으로 부드럽게 사용하고, 거친 도구로 문지르지 마세요."
+      },
+      {
+        "id": "aad_pore_cleansing",
+        "title": "What can treat large facial pores?",
+        "publisher": "American Academy of Dermatology (AAD)",
+        "url": "https://www.aad.org/public/everyday-care/skin-care-secrets/face/treat-large-pores",
+        "published_or_updated": null,
+        "checked_at": "2026-09-25",
+        "evidence": "뜨거운 물과 강한 마찰은 자극을 줄 수 있어 미지근한 물과 부드러운 세안을 권한다.",
+        "guidance": "모공을 세게 짜거나 문지르지 말고, 미지근한 물로 부드럽게 세안하세요."
+      },
+      {
+        "id": "aad_moisturize",
+        "title": "How to control oily skin — moisturize after cleansing",
+        "publisher": "American Academy of Dermatology (AAD)",
+        "url": "https://www.aad.org/public/everyday-care/skin-care-basics/dry/oily-skin",
+        "published_or_updated": null,
+        "checked_at": "2026-09-25",
+        "evidence": "피부에 유분이 있어도 세안 후 보습제를 사용하여 수분을 유지하도록 안내한다.",
+        "guidance": "세안 후에는 보습제를 사용하세요. 유분이 느껴진다는 이유만으로 보습을 생략하지 마세요."
+      },
+      {
+        "id": "mfds_sun_protection",
+        "title": "자외선차단제, 제대로 발라야 효과↑…올바른 사용법은?",
+        "publisher": "식품의약품안전처 (대한민국 정책브리핑 게재)",
+        "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148965990",
+        "published_or_updated": "2026-06-05",
+        "checked_at": "2026-09-25",
+        "evidence": "자외선차단제는 색소 침착 예방에 도움을 줄 수 있으며, 기능성화장품 표시와 사용법을 확인하고 외출 전 충분히 바르도록 안내한다.",
+        "guidance": "자외선차단제의 기능성화장품 표시와 사용법을 확인하고, 외출 전에 충분히 바르며 모자나 긴소매 옷도 함께 활용하세요."
+      }
+    ],
+    "priority_indicators": [
+      "pore"
+    ]
+  },
+  "error": null
+}

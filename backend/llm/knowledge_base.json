@@ -1,0 +1,93 @@
+{
+  "version": "2026-09-25.2",
+  "scope": "공식 기관의 소비자용 안내를 요약한 지식 베이스. 임상 진료지침 또는 국내 모든 가이드라인 준수를 의미하지 않음.",
+  "pending_sources": [
+    {"publisher": "대한피부과의사회", "status": "pending_topic_sources", "note": "전문의 상담·자가 관리 주의 원문은 확인하여 entries에 반영함. 여드름·세안·보습·자외선 관련 구체적인 관리법의 별도 원문은 추가 확보 필요."}
+  ],
+  "entries": [
+    {
+      "id": "akd_professional_guidance",
+      "title": "피부 고민 해결! — 피부과 전문의에게 진료를 받아야 하는 이유",
+      "publisher": "대한피부과의사회",
+      "url": "https://akd.or.kr/dermatologist/why",
+      "published_or_updated": null,
+      "date_note": "본문에 발행·개정일이 표시되지 않음. 하단 Copyright 2025는 발행일로 사용하지 않음.",
+      "checked_at": "2026-09-25",
+      "verified": true,
+      "general": true,
+      "indicators": ["acne", "pigmentation", "pore", "sebum"],
+      "evidence": "원문의 ‘체계적이고 전문적인 진단’은 비슷해 보이는 피부 질환의 정확한 진단을, ‘맞춤형 치료와 관리’는 잘못된 자가 관리 대신 전문가 지도를 강조한다.",
+      "guidance": "피부 상태에 맞는 관리 방법이 궁금하다면 피부과 전문의와 상담하고, 임의의 자가 관리는 피하세요."
+    },
+    {
+      "id": "aad_acne_gentle",
+      "title": "Acne: Tips for managing",
+      "publisher": "American Academy of Dermatology (AAD)",
+      "url": "https://www.aad.org/public/diseases/acne/skin-care/tips",
+      "published_or_updated": null,
+      "date_note": "확인한 본문에서 발행·개정일을 확정하지 못함",
+      "checked_at": "2026-09-25",
+      "verified": true,
+      "general": false,
+      "indicators": ["acne"],
+      "evidence": "순한 세정제와 손끝으로 부드럽게 씻고, 거친 도구로 문질러 자극하는 행동을 피하도록 안내한다.",
+      "guidance": "세안할 때 순한 세정제를 손끝으로 부드럽게 사용하고, 거친 도구로 문지르지 마세요."
+    },
+    {
+      "id": "aad_pore_cleansing",
+      "title": "What can treat large facial pores?",
+      "publisher": "American Academy of Dermatology (AAD)",
+      "url": "https://www.aad.org/public/everyday-care/skin-care-secrets/face/treat-large-pores",
+      "published_or_updated": null,
+      "date_note": "확인한 본문에서 발행·개정일을 확정하지 못함",
+      "checked_at": "2026-09-25",
+      "verified": true,
+      "general": false,
+      "indicators": ["pore"],
+      "evidence": "뜨거운 물과 강한 마찰은 자극을 줄 수 있어 미지근한 물과 부드러운 세안을 권한다.",
+      "guidance": "모공을 세게 짜거나 문지르지 말고, 미지근한 물로 부드럽게 세안하세요."
+    },
+    {
+      "id": "aad_sebum_mild",
+      "title": "How to control oily skin",
+      "publisher": "American Academy of Dermatology (AAD)",
+      "url": "https://www.aad.org/public/everyday-care/skin-care-basics/dry/oily-skin",
+      "published_or_updated": null,
+      "date_note": "확인한 본문에서 발행·개정일을 확정하지 못함",
+      "checked_at": "2026-09-25",
+      "verified": true,
+      "general": false,
+      "indicators": ["sebum"],
+      "evidence": "유분이 고민인 경우에도 강한 세정제 대신 순한 세정제를 사용하도록 안내한다. 이 안내는 사용자가 지성이라는 진단을 뜻하지 않는다.",
+      "guidance": "유분이 신경 쓰이더라도 강한 세정제로 과도하게 씻기보다는 순한 세정제를 사용하세요."
+    },
+    {
+      "id": "aad_moisturize",
+      "title": "How to control oily skin — moisturize after cleansing",
+      "publisher": "American Academy of Dermatology (AAD)",
+      "url": "https://www.aad.org/public/everyday-care/skin-care-basics/dry/oily-skin",
+      "published_or_updated": null,
+      "date_note": "확인한 본문에서 발행·개정일을 확정하지 못함",
+      "checked_at": "2026-09-25",
+      "verified": true,
+      "general": true,
+      "indicators": ["acne", "pigmentation", "pore", "sebum"],
+      "evidence": "피부에 유분이 있어도 세안 후 보습제를 사용하여 수분을 유지하도록 안내한다.",
+      "guidance": "세안 후에는 보습제를 사용하세요. 유분이 느껴진다는 이유만으로 보습을 생략하지 마세요."
+    },
+    {
+      "id": "mfds_sun_protection",
+      "title": "자외선차단제, 제대로 발라야 효과↑…올바른 사용법은?",
+      "publisher": "식품의약품안전처 (대한민국 정책브리핑 게재)",
+      "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148965990",
+      "published_or_updated": "2026-06-05",
+      "date_note": "원문 표시 발행일",
+      "checked_at": "2026-09-25",
+      "verified": true,
+      "general": true,
+      "indicators": ["pigmentation"],
+      "evidence": "자외선차단제는 색소 침착 예방에 도움을 줄 수 있으며, 기능성화장품 표시와 사용법을 확인하고 외출 전 충분히 바르도록 안내한다.",
+      "guidance": "자외선차단제의 기능성화장품 표시와 사용법을 확인하고, 외출 전에 충분히 바르며 모자나 긴소매 옷도 함께 활용하세요."
+    }
+  ]
+}
