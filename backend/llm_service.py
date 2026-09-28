@@ -40,7 +40,7 @@ def generate_report(analysis_data, *, mode="auto"):
     facts = interpret(data)
     meta["priority_indicators"] = facts["priority_indicators"]
     try:
-        version, guidelines = select_guidelines(data["scores"])
+        version, guidelines = select_guidelines(data["scores"], data.get("self_reported_skin_type"))
         if not guidelines:
             raise ValueError("empty knowledge base")
         meta["knowledge_version"] = version

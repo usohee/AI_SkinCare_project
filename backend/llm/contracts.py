@@ -47,8 +47,14 @@ def validate_input(data):
         if key == "sebum_ratio" and value > 100:
             raise InputError("sebum_ratio는 서버 응답 기준 0~100 백분율입니다.")
         clean_raw[key] = value
-    # user_id, 이메일, 이미지, 피부 타입 등은 이 경계를 통과하지 않는다.
+    # 알고리즘의 skin_type은 무시한다. 별도의 사용자 자기보고만 허용한다.
     clean = {"total_score": data["total_score"], "scores": {k: scores[k] for k in LABELS}, "raw_values": clean_raw}
+    reported = data.get("self_reported_skin_type")
+    if reported is not None:
+        if type(reported) is not str or reported not in ("dry", "oily", "combination_oily", "unknown"):
+            raise InputError("self_reported_skin_type은 dry, oily, combination_oily, unknown 중 하나여야 합니다.")
+        if reported != "unknown":
+            clean["self_reported_skin_type"] = reported
     expected = max(0, 100 - round(sum(scores.values()) / 4))
     warnings = []
     if expected != data["total_score"]:

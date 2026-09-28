@@ -57,6 +57,24 @@ Python dict 또는 JSON 문자열을 전달한다. 예시는 `examples/analysis.
 0점을 누락값으로 취급하지 않는다. 종합 점수가 `100 - round(sum(scores)/4)`와 다르면
 원래 종합 점수를 유지하고 `metadata.warnings`에 불일치를 기록한다. Python의 반올림 방식과 같다.
 
+## 2-1. 선택적인 자기보고 피부 타입 (2026-09-28 추가)
+
+최상위에 `"self_reported_skin_type": "dry"`를 선택적으로 추가할 수 있다.
+허용값: `dry`, `oily`, `combination_oily`, `unknown`. 생략/null/unknown이면 유형별 자료를 선택하지 않는다.
+기존 입력·호출과 호환된다. 알고리즘의 `skin_type`은 계속 무시하며 자기보고 필드로 복사하지 않는다.
+`combination_oily`는 원문의 복합지성이며 일반 복합성 전체를 의미하지 않는다.
+이 유형만 선택적으로 LLM에 전달하고 사용자 ID·사진·프로필 자유문은 제외한다.
+
+```powershell
+.\.venv\Scripts\python.exe -m backend.llm_service --mode offline --input examples/analysis.dry.json --output report.local.json
+```
+
+기대 결과: 조건부 건조피부 관리 안내와 대한피부과학회 원문 출처가 포함된다.
+선택량: 상위 감점 두 항목에서 각 최대 2개 + 공통 3개 + 유형 최대 1개. 일반 예시 7개, 유형 예시 8개다.
+다른 유형 자료 ID를 모델이 선택하면 출력 검증에서 거부한다. 점수로 피부 타입을 판정하지 않는다.
+2015년 교육자료를 최신 임상 지침으로 표현하지 않는다.
+원문 6개는 `doc/skin_guidelines/`, 생성 예시는 `examples/report.dry.fallback.json`에 있다.
+
 ## 3. 함수 하나로 호출
 
 프로젝트 루트에서 실행하는 Python 코드:
@@ -104,8 +122,8 @@ result = generate_report(analysis_data)
     "llm_success": false,
     "llm_attempted": false,
     "model": null,
-    "prompt_version": "1.0.0",
-    "knowledge_version": "2026-09-25.2",
+    "prompt_version": "1.1.0",
+    "knowledge_version": "2026-09-28.1",
     "warnings": [],
     "fallback_reason": "MISSING_API_KEY",
     "priority_indicators": ["pore"],

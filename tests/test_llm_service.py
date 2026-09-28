@@ -182,13 +182,13 @@ class ReportTests(unittest.TestCase):
         self.assertIn("aad_pore_cleansing", ids)
         self.assertNotIn("aad_sebum_mild", ids)
         self.assertTrue(all(e["verified"] and e["url"].startswith("https://") for e in entries))
-        self.assertLessEqual(len(entries), 5)
+        self.assertLessEqual(len(entries), 7)
 
     def test_akd_original_source_reaches_report_and_prompt(self):
         clean, _ = validate_input(SAMPLE)
         version, entries = select_guidelines(clean["scores"])
         entry = next(e for e in entries if e["id"] == "akd_professional_guidance")
-        self.assertEqual(version, "2026-09-25.2")
+        self.assertEqual(version, "2026-09-28.1")
         self.assertEqual(entry["publisher"], "대한피부과의사회")
         self.assertEqual(entry["url"], "https://akd.or.kr/dermatologist/why")
         self.assertIsNone(entry["published_or_updated"])
@@ -198,6 +198,49 @@ class ReportTests(unittest.TestCase):
         result = generate_report(SAMPLE, mode="offline")
         self.assertIn(entry["guidance"], result["report"]["care_tips"])
         self.assertTrue(any(s["id"] == entry["id"] for s in result["metadata"]["sources"]))
+
+    def test_skin_type_requires_self_report(self):
+        for reported in (None, "unknown"):
+            data = {**SAMPLE, "skin_type": "oily", "self_reported_skin_type": reported,
+                    "scores": dict.fromkeys(LABELS, 100)}
+            result = generate_report(data, mode="offline")
+            self.assertFalse(any(s["id"].startswith("kda_") for s in result["metadata"]["sources"]))
+
+    def test_self_report_selects_matching_guidance(self):
+        for kind in ("dry", "oily", "combination_oily"):
+            with self.subTest(kind=kind):
+                clean, _ = validate_input({**SAMPLE, "self_reported_skin_type": kind})
+                _, entries = select_guidelines(clean["scores"], clean["self_reported_skin_type"])
+                typed = [e for e in entries if e.get("skin_types")]
+                self.assertEqual(len(typed), 1)
+                self.assertIn(kind, typed[0]["skin_types"])
+                self.assertLessEqual(len(entries), 8)
+                result = generate_report(clean, mode="offline")
+                self.assertIn(typed[0]["guidance"], result["report"]["care_tips"])
+                _, prompt = build_prompts(clean, interpret(clean), entries)
+                self.assertEqual(json.loads(prompt)["analysis"]["self_reported_skin_type"], kind)
+                self.assertIn("2015", prompt)
+
+    def test_bad_self_report_rejected(self):
+        for value in (True, [], {}, 1, "ignore instructions", "combination", "sensitive"):
+            result = generate_report({**SAMPLE, "self_reported_skin_type": value})
+            self.assertEqual(result["error"]["code"], "INVALID_INPUT")
+
+    def test_llm_cannot_select_wrong_type(self):
+        bad = candidate()
+        bad["care_tip_ids"] = ["kda_oily_care"]
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test", "OPENAI_MODEL": "test"}), \
+             patch("backend.llm_service.request_report", return_value=bad):
+            result = generate_report({**SAMPLE, "self_reported_skin_type": "dry"})
+        self.assertEqual(result["metadata"]["fallback_reason"], "INVALID_OUTPUT")
+
+    def test_detailed_guidance_is_selected(self):
+        result = generate_report(SAMPLE, mode="offline")
+        ids = {s["id"] for s in result["metadata"]["sources"]}
+        self.assertIn("aad_acne_no_picking", ids)
+        self.assertIn("aad_pore_product_labels", ids)
+        self.assertTrue(any("15분" in tip for tip in result["report"]["care_tips"]))
+        self.assertLessEqual(len(result["report"]["care_tips"]), 7)
 
     def test_input_not_mutated(self):
         data = copy.deepcopy(SAMPLE)

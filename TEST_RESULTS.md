@@ -1,5 +1,15 @@
 # LLM 모듈 실행·검증 기록
 
+## 최신 검증: 상세 관리 보강 (2026-09-28)
+
+- KB 2026-09-28.1, 프롬프트 1.1.0. 기존 안내를 구체화하고 선택적 자기보고 유형을 지원한다.
+- 전체 테스트 **41개 중 40개 통과, 실제 API 1개 생략**.
+- 추가 테스트: 자기보고 없음/unknown, 유형별 선택, 입력 오류, 다른 유형 ID 거부, 상세 자료 선택.
+- 일반 입력 실제 생성: fallback 안내 7개, 유형 자료 없음. dry 입력: 안내 8개, kda_dry_care 포함.
+- `examples/report.fallback.json`, `examples/report.dry.fallback.json`에 실행 결과 저장.
+- 원문 6개를 다운로드하고 본문 키워드를 확인. URL·확인일·SHA-256은 doc/skin_guidelines/manifest.json에 기록.
+- 실제 LLM·앱 통합은 미검증이다. 아래는 이전 검증 이력이다.
+
 검증일: 2026-09-25. 환경: Windows / Python 3.12.10 / OpenAI SDK 2.54.0.
 
 ## 요청한 세 가지 최종 확인
