@@ -1,0 +1,56 @@
+[
+  {
+    "file": "KDA_skin_care_20151221.html",
+    "url": "https://www.derma.or.kr/new/general/treatment.php?mod=document&uid=3341",
+    "checked_at": "2026-09-28",
+    "published_or_updated": "2015-12-21",
+    "sha256": "072693dd72b5cf158084c558ec296aa6c155a11fb5000f4ddee255b202bf4bcd",
+    "bytes": 19403,
+    "content_check": true
+  },
+  {
+    "file": "AKD_professional_guidance.html",
+    "url": "https://akd.or.kr/dermatologist/why",
+    "checked_at": "2026-09-28",
+    "published_or_updated": null,
+    "sha256": "619de58f51d7906bf615620d8b37f7455661eaa80f4dcbf68a78e03cc9ea21d6",
+    "bytes": 16320,
+    "content_check": true
+  },
+  {
+    "file": "AAD_acne_care.html",
+    "url": "https://www.aad.org/public/diseases/acne/skin-care/tips",
+    "checked_at": "2026-09-28",
+    "published_or_updated": null,
+    "sha256": "b9ef17f24b9c50ae9fd77cdf0aac8800289b499b4ab49aa8ea8833998dd05c84",
+    "bytes": 154893,
+    "content_check": true
+  },
+  {
+    "file": "AAD_pore_care.html",
+    "url": "https://www.aad.org/public/everyday-care/skin-care-secrets/face/treat-large-pores",
+    "checked_at": "2026-09-28",
+    "published_or_updated": null,
+    "sha256": "f7fbbb8a958f43c3b88207c4779a2993efd54a3b6a5d77b523f9368b7be7b494",
+    "bytes": 148818,
+    "content_check": true
+  },
+  {
+    "file": "AAD_oily_skin_care.html",
+    "url": "https://www.aad.org/public/everyday-care/skin-care-basics/dry/oily-skin",
+    "checked_at": "2026-09-28",
+    "published_or_updated": null,
+    "sha256": "84b2da50ab4b8a9c2e43c5578da3066f2b9a637cd76576de6e147b70aa86bc04",
+    "bytes": 146719,
+    "content_check": true
+  },
+  {
+    "file": "MFDS_sunscreen_20260605.html",
+    "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148965990",
+    "checked_at": "2026-09-28",
+    "published_or_updated": "2026-06-05",
+    "sha256": "9fe489f93db9b214db7b7460a5d571957805e121acb3ad804b51aa088da9da31",
+    "bytes": 174832,
+    "content_check": true
+  }
+]

@@ -225,3 +225,8 @@ local.properties
 # backend
 backend/*.db
 backend/test_selfie.jpg
+# LLM secrets and generated reports
+.env.*
+!.env.example
+report.local.json
+report.live.json

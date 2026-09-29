@@ -1,0 +1,7 @@
+{
+  "success": true,
+  "user_id": "synthetic_demo_only",
+  "total_score": 72,
+  "scores": {"acne": 35, "pigmentation": 20, "pore": 40, "sebum": 17},
+  "raw_values": {"acne_count": 5, "pigmentation_count": 50, "pore_variance": 10.8, "sebum_ratio": 10.2}
+}

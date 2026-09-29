@@ -1,0 +1,6 @@
+{
+  "success": true,
+  "total_score": 72,
+  "scores": {"acne": 35, "pigmentation": 20, "pore": 40, "sebum": 17},
+  "self_reported_skin_type": "dry"
+}
