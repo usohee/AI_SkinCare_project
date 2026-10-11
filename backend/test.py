@@ -9,11 +9,13 @@ import glob
 from flask import Flask, request, jsonify
 from matplotlib import rc
 from werkzeug.security import generate_password_hash, check_password_hash
+from llm_service import generate_report
 import matplotlib.font_manager as fm
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
 app = Flask(__name__)
+app.json.ensure_ascii = False
 
 # ── DB 초기화 (백엔드/DB) ─────────────────────────
 DB_PATH = "skincare.db"
@@ -415,18 +417,28 @@ def analyze_skin_api():
         "sebum_ratio":        round(raw["sebum"] * 100, 1)
     }
 
+    # [LLM 연동] 수치 -> 자연어 리포트 생성
+    analysis_data = {
+        "success": True,
+        "total_score": total_score,
+        "scores": scores,
+        "raw_values": raw_values,
+    }
+    llm_result = generate_report(analysis_data)
+
     # 백엔드/DB - 분석 결과 즉시 DB에 저장
     user_id = request.form.get("user_id") or str(uuid.uuid4())
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""
         INSERT INTO skin_analyses
-        (user_id, score_total, score_acne, score_pore, score_pigmentation, score_sebum, raw_values)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        (user_id, score_total, score_acne, score_pore, score_pigmentation, score_sebum, raw_values, llm_report)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             user_id, total_score,
             scores.get("acne"), scores.get("pore"),
             scores.get("pigmentation"), scores.get("sebum"),
-            json.dumps(raw_values)
+            json.dumps(raw_values),
+            json.dumps(llm_result, ensure_ascii=False)
         ))
     conn.commit()
     conn.close()
@@ -436,7 +448,10 @@ def analyze_skin_api():
         "user_id": user_id,
         "total_score": total_score,
         "scores": scores,
-        "raw_values": raw_values
+        "raw_values": raw_values,
+        "llm_report": llm_result["report"],
+        "llm_metadata": llm_result["metadata"],
+        "llm_error": llm_result["error"]
     }), 200
 
 # ── 11. 히스토리 저장/조회 API (백엔드/DB) ────────────────
@@ -446,7 +461,7 @@ def get_history(user_id):
     conn.row_factory = sqlite3.Row
     rows = conn.execute("""
         SELECT analyses_id, score_total, score_acne, score_pore,
-                score_pigmentation, score_sebum, raw_values, created_at
+                score_pigmentation, score_sebum, raw_values, llm_report, created_at
             FROM skin_analyses
             WHERE user_id = ?
             ORDER BY created_at ASC
@@ -456,6 +471,14 @@ def get_history(user_id):
     history = [dict(row) for row in rows]
     for h in history:
         h["raw_values"] = json.loads(h["raw_values"]) if h["raw_values"] else {}
+
+        stored = json.loads(h["llm_report"]) if h["llm_report"] else None
+        if stored:
+            h["llm_report"] = stored.get("report")       # 리포트 본문만
+            h["llm_metadata"] = stored.get("metadata")   # 출처, fallback 여부 등
+        else:
+            h["llm_report"] = None
+            h["llm_metadata"] = None
 
     return jsonify({"success": True, "user_id": user_id, "history": history}), 200
 
@@ -479,7 +502,8 @@ def signup():
     user_id = str(uuid.uuid4())
     password_hash = generate_password_hash(password)
     conn.execute("""
-        INSERT INTO users (user_id, email, password_hash, nickname)
+        INSERT INTO users 
+        (user_id, email, password_hash, nickname)
         VALUES (?, ?, ?, ?)
     """, (user_id, email, password_hash, nickname))
     conn.commit()

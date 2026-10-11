@@ -1,0 +1,2 @@
+# 검증한 공식 SDK 버전. 기존 Flask/OpenCV 의존성과 분리한다.
+openai==2.54.0
