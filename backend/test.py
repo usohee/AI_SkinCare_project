@@ -54,6 +54,31 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(user_id)
         )
     """)
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS products (
+            product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_name VARCHAR NOT NULL,
+            brand VARCHAR,
+            ingredients TEXT,
+            category VARCHAR,
+            formulation VARCHAR,
+            image_url VARCHAR
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS user_cabinets (
+            cabinet_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            product_id INTEGER NOT NULL,
+            is_in_routine VARCHAR DEFAULT 'true',
+            routine_time VARCHAR DEFAULT 'NONE',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(user_id),
+            FOREIGN KEY (product_id) REFERENCES products(product_id)
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -579,7 +604,83 @@ def get_profile(user_id):
 
     return jsonify({"success": True, "profile": profile}), 200
 
-# ── 14. 엔트리포인트 ─────────────────────────────────────
+# ── 14. 제품 / 소장품 API (백엔드/DB) ─────────────────────
+
+# 성분 데이터를 한 번에 밀어넣는 용도
+@app.route('/products/bulk-import', methods=['POST'])
+def bulk_import_products():
+    data = request.get_json()
+    products = data.get("products", [])
+
+    conn = sqlite3.connect(DB_PATH)
+    for p in products:
+        conn.execute("""
+            INSERT INTO products (product_name, brand, ingredients, category, formulation, image_url)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            p.get("product_name"), p.get("brand"), p.get("ingredients"),
+            p.get("category"), p.get("formulation"), p.get("image_url")
+        ))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"success": True, "inserted": len(products)}), 201
+
+
+# 제품 검색 (?q=검색어)
+@app.route('/products', methods=['GET'])
+def list_products():
+    keyword = request.args.get("q", "")
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("""
+        SELECT * FROM products
+        WHERE product_name LIKE ?
+        ORDER BY product_id DESC
+    """, (f"%{keyword}%",)).fetchall()
+    conn.close()
+
+    return jsonify({"success": True, "products": [dict(r) for r in rows]}), 200
+
+
+# 소장 제품 등록
+@app.route('/users/<user_id>/cabinet', methods=['POST'])
+def add_to_cabinet(user_id):
+    data = request.get_json()
+    product_id = data.get("product_id")
+    routine_time = data.get("routine_time", "NONE")  # MORNING / NIGHT / ALL / NONE
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("""
+        INSERT INTO user_cabinets (user_id, product_id, is_in_routine, routine_time)
+        VALUES (?, ?, ?, ?)
+    """, (user_id, product_id, "true", routine_time))
+    conn.commit()
+    cabinet_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+    conn.close()
+
+    return jsonify({"success": True, "cabinet_id": cabinet_id}), 201
+
+
+# 내 소장 제품 목록 (products와 JOIN)
+@app.route('/users/<user_id>/cabinet', methods=['GET'])
+def get_cabinet(user_id):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("""
+        SELECT c.cabinet_id, c.is_in_routine, c.routine_time, c.created_at,
+               p.product_id, p.product_name, p.brand, p.ingredients,
+               p.category, p.formulation, p.image_url
+        FROM user_cabinets c
+        JOIN products p ON c.product_id = p.product_id
+        WHERE c.user_id = ?
+        ORDER BY c.created_at DESC
+    """, (user_id,)).fetchall()
+    conn.close()
+
+    return jsonify({"success": True, "cabinet": [dict(r) for r in rows]}), 200
+
+# ── 15. 엔트리포인트 ─────────────────────────────────────
 if __name__ == "__main__":
 
     # ── pigmentation / pore / sebum: 다중 샘플 검증 ──────
