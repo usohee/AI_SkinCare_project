@@ -9,11 +9,13 @@ import glob
 from flask import Flask, request, jsonify
 from matplotlib import rc
 from werkzeug.security import generate_password_hash, check_password_hash
+from llm_service import generate_report
 import matplotlib.font_manager as fm
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
 app = Flask(__name__)
+app.json.ensure_ascii = False
 
 # ── DB 초기화 (백엔드/DB) ─────────────────────────
 DB_PATH = "skincare.db"
@@ -52,6 +54,31 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(user_id)
         )
     """)
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS products (
+            product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_name VARCHAR NOT NULL,
+            brand VARCHAR,
+            ingredients TEXT,
+            category VARCHAR,
+            formulation VARCHAR,
+            image_url VARCHAR
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS user_cabinets (
+            cabinet_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            product_id INTEGER NOT NULL,
+            is_in_routine VARCHAR DEFAULT 'true',
+            routine_time VARCHAR DEFAULT 'NONE',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(user_id),
+            FOREIGN KEY (product_id) REFERENCES products(product_id)
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -415,18 +442,28 @@ def analyze_skin_api():
         "sebum_ratio":        round(raw["sebum"] * 100, 1)
     }
 
+    # [LLM 연동] 수치 -> 자연어 리포트 생성
+    analysis_data = {
+        "success": True,
+        "total_score": total_score,
+        "scores": scores,
+        "raw_values": raw_values,
+    }
+    llm_result = generate_report(analysis_data)
+
     # 백엔드/DB - 분석 결과 즉시 DB에 저장
     user_id = request.form.get("user_id") or str(uuid.uuid4())
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""
         INSERT INTO skin_analyses
-        (user_id, score_total, score_acne, score_pore, score_pigmentation, score_sebum, raw_values)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        (user_id, score_total, score_acne, score_pore, score_pigmentation, score_sebum, raw_values, llm_report)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             user_id, total_score,
             scores.get("acne"), scores.get("pore"),
             scores.get("pigmentation"), scores.get("sebum"),
-            json.dumps(raw_values)
+            json.dumps(raw_values),
+            json.dumps(llm_result, ensure_ascii=False)
         ))
     conn.commit()
     conn.close()
@@ -436,7 +473,10 @@ def analyze_skin_api():
         "user_id": user_id,
         "total_score": total_score,
         "scores": scores,
-        "raw_values": raw_values
+        "raw_values": raw_values,
+        "llm_report": llm_result["report"],
+        "llm_metadata": llm_result["metadata"],
+        "llm_error": llm_result["error"]
     }), 200
 
 # ── 11. 히스토리 저장/조회 API (백엔드/DB) ────────────────
@@ -446,7 +486,7 @@ def get_history(user_id):
     conn.row_factory = sqlite3.Row
     rows = conn.execute("""
         SELECT analyses_id, score_total, score_acne, score_pore,
-                score_pigmentation, score_sebum, raw_values, created_at
+                score_pigmentation, score_sebum, raw_values, llm_report, created_at
             FROM skin_analyses
             WHERE user_id = ?
             ORDER BY created_at ASC
@@ -456,6 +496,14 @@ def get_history(user_id):
     history = [dict(row) for row in rows]
     for h in history:
         h["raw_values"] = json.loads(h["raw_values"]) if h["raw_values"] else {}
+
+        stored = json.loads(h["llm_report"]) if h["llm_report"] else None
+        if stored:
+            h["llm_report"] = stored.get("report")       # 리포트 본문만
+            h["llm_metadata"] = stored.get("metadata")   # 출처, fallback 여부 등
+        else:
+            h["llm_report"] = None
+            h["llm_metadata"] = None
 
     return jsonify({"success": True, "user_id": user_id, "history": history}), 200
 
@@ -479,7 +527,8 @@ def signup():
     user_id = str(uuid.uuid4())
     password_hash = generate_password_hash(password)
     conn.execute("""
-        INSERT INTO users (user_id, email, password_hash, nickname)
+        INSERT INTO users 
+        (user_id, email, password_hash, nickname)
         VALUES (?, ?, ?, ?)
     """, (user_id, email, password_hash, nickname))
     conn.commit()
@@ -555,7 +604,83 @@ def get_profile(user_id):
 
     return jsonify({"success": True, "profile": profile}), 200
 
-# ── 14. 엔트리포인트 ─────────────────────────────────────
+# ── 14. 제품 / 소장품 API (백엔드/DB) ─────────────────────
+
+# 성분 데이터를 한 번에 밀어넣는 용도
+@app.route('/products/bulk-import', methods=['POST'])
+def bulk_import_products():
+    data = request.get_json()
+    products = data.get("products", [])
+
+    conn = sqlite3.connect(DB_PATH)
+    for p in products:
+        conn.execute("""
+            INSERT INTO products (product_name, brand, ingredients, category, formulation, image_url)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            p.get("product_name"), p.get("brand"), p.get("ingredients"),
+            p.get("category"), p.get("formulation"), p.get("image_url")
+        ))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"success": True, "inserted": len(products)}), 201
+
+
+# 제품 검색 (?q=검색어)
+@app.route('/products', methods=['GET'])
+def list_products():
+    keyword = request.args.get("q", "")
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("""
+        SELECT * FROM products
+        WHERE product_name LIKE ?
+        ORDER BY product_id DESC
+    """, (f"%{keyword}%",)).fetchall()
+    conn.close()
+
+    return jsonify({"success": True, "products": [dict(r) for r in rows]}), 200
+
+
+# 소장 제품 등록
+@app.route('/users/<user_id>/cabinet', methods=['POST'])
+def add_to_cabinet(user_id):
+    data = request.get_json()
+    product_id = data.get("product_id")
+    routine_time = data.get("routine_time", "NONE")  # MORNING / NIGHT / ALL / NONE
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("""
+        INSERT INTO user_cabinets (user_id, product_id, is_in_routine, routine_time)
+        VALUES (?, ?, ?, ?)
+    """, (user_id, product_id, "true", routine_time))
+    conn.commit()
+    cabinet_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+    conn.close()
+
+    return jsonify({"success": True, "cabinet_id": cabinet_id}), 201
+
+
+# 내 소장 제품 목록 (products와 JOIN)
+@app.route('/users/<user_id>/cabinet', methods=['GET'])
+def get_cabinet(user_id):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("""
+        SELECT c.cabinet_id, c.is_in_routine, c.routine_time, c.created_at,
+               p.product_id, p.product_name, p.brand, p.ingredients,
+               p.category, p.formulation, p.image_url
+        FROM user_cabinets c
+        JOIN products p ON c.product_id = p.product_id
+        WHERE c.user_id = ?
+        ORDER BY c.created_at DESC
+    """, (user_id,)).fetchall()
+    conn.close()
+
+    return jsonify({"success": True, "cabinet": [dict(r) for r in rows]}), 200
+
+# ── 15. 엔트리포인트 ─────────────────────────────────────
 if __name__ == "__main__":
 
     # ── pigmentation / pore / sebum: 다중 샘플 검증 ──────
