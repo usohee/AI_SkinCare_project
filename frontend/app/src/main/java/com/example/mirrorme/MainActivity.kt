@@ -1,5 +1,6 @@
 package com.example.mirrorme
 
+import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import android.os.Bundle
@@ -17,6 +18,8 @@ sealed interface Screen {
 }
 
 class MainActivity : ComponentActivity() {
+    private val viewModel: SkinViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -31,6 +34,7 @@ class MainActivity : ComponentActivity() {
                     when (val screen = currentScreen) {
                         is Screen.Analysis -> {
                             AnalysisScreen(
+                                viewModel = viewModel,
                                 onNavigateToResult = { response ->
                                     currentScreen = Screen.Report(response)
                                 },
@@ -44,7 +48,12 @@ class MainActivity : ComponentActivity() {
                                             "2024-03-15" -> 65
                                             else -> 60
                                         },
-                                        scores = SkinDetails(acne = 75, pigmentation = 60, pore = 70, sebum = 55)
+                                        scores = SkinDetails(acne = 75, pigmentation = 60, pore = 70, sebum = 55),
+                                        llmReport = LlmReport(
+                                            summary = "과거 기록($date)에 따른 피부 상태 리포트입니다. 전반적으로 양호한 상태를 유지하고 있습니다.",
+                                            indicators = emptyMap(),
+                                            careTipIds = emptyList()
+                                        )
                                     )
                                     currentScreen = Screen.Report(dummyResponse)
                                 }

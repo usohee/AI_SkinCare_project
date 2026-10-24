@@ -73,12 +73,14 @@ private val LightGray = Color(0xFFF5F5F5)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalysisScreen(
+    viewModel: SkinViewModel,
     onNavigateToResult: (SkinAnalysisResponse) -> Unit = {},
     onNavigateToHistory: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    var isLoading by remember { mutableStateOf(false) }
+    val analysisState by viewModel.analysisState.collectAsState()
+    
     var showGuidance by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
@@ -90,6 +92,16 @@ fun AnalysisScreen(
             "2024-03-15",
             "2024-02-28"
         )
+    }
+
+    LaunchedEffect(analysisState) {
+        if (analysisState is AnalysisState.Success) {
+            onNavigateToResult((analysisState as AnalysisState.Success).response)
+            viewModel.resetState()
+        } else if (analysisState is AnalysisState.Error) {
+            Toast.makeText(context, (analysisState as AnalysisState.Error).message, Toast.LENGTH_LONG).show()
+            viewModel.resetState()
+        }
     }
 
     if (showGuidance) {
@@ -145,11 +157,12 @@ fun AnalysisScreen(
                 Button(
                     onClick = {
                         showGuidance = false
-                        performUpload(context, { isLoading = it }, onNavigateToResult)
+                        viewModel.analyzeSkin(context, null) // null pass will use sample image in VM
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(75.dp),
+                    enabled = analysisState !is AnalysisState.Loading,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
                         contentColor = Color.Black
@@ -206,9 +219,9 @@ fun AnalysisScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Image(
-                        painter = painterResource(id = R.drawable.mirrorme_logo_header_small), // 업로드한 이미지 리소스 ID
+                        painter = painterResource(id = R.drawable.mirrorme_logo_header_small), 
                         modifier = Modifier.height(40.dp),
-                        contentDescription = "MirrorMe Logo", // 기존 텍스트 크기와 비슷하게 높이 조절
+                        contentDescription = "MirrorMe Logo", 
                         contentScale = ContentScale.Fit
                     )
                 },
@@ -250,12 +263,12 @@ fun AnalysisScreen(
                     .height(220.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(LightGray)
-                    .clickable(enabled = !isLoading) {
+                    .clickable(enabled = analysisState !is AnalysisState.Loading) {
                         showGuidance = true
                     },
                 contentAlignment = Alignment.Center
             ) {
-                if (isLoading) {
+                if (analysisState is AnalysisState.Loading) {
                     CircularProgressIndicator(color = DeepGreen)
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
