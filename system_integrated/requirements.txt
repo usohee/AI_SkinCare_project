@@ -1,0 +1,5 @@
+opencv-python>=4.10.0
+numpy>=1.26.0
+python-dotenv>=1.0.1
+openai>=1.40.0
+pydantic>=2.8.2
