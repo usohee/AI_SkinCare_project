@@ -1,0 +1,12 @@
+# 서버 실행에 필요한 패키지
+flask>=3.0
+opencv-python>=4.8
+numpy>=1.24
+python-dotenv>=1.0     # backend/.env 에서 OPENAI_API_KEY 등을 읽는다
+openai==2.54.0         # LLM 리포트 (키가 없거나 실패하면 규칙 기반 리포트로 대체됨)
+
+# 알고리즘 검증 도구(tools/validate_algorithm.py)에서만 필요
+matplotlib>=3.7
+
+# 테스트
+pytest>=7.4

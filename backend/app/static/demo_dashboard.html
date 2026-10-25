@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mirror Me 시연</title>
+<style>
+  :root {
+    --bg: #f5f3ef; --card: #ffffff; --ink: #1f2a2e; --muted: #6a767b;
+    --line: #e4e0d9; --accent: #2f7d6b; --accent-ink: #ffffff; --accent-soft: #e3f1ed;
+    --warn: #b4552d; --warn-soft: #fbece4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+    font-size: 17px; line-height: 1.55;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 60px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  h1 { margin: 0; font-size: 28px; letter-spacing: -0.5px; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 15px; }
+  .chip { background: var(--accent-soft); color: var(--accent); padding: 4px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; margin-bottom: 18px; }
+  h2 { margin: 0 0 14px; font-size: 19px; }
+  .step { display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 14px; margin-right: 8px; }
+  .row { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+  .thumb { width: 132px; height: 132px; border-radius: 12px; object-fit: cover; background: #e9e6e0; border: 1px solid var(--line); }
+  .thumb-wrap { text-align: center; font-size: 13px; color: var(--muted); }
+  button.primary {
+    background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 12px;
+    padding: 14px 26px; font-size: 18px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  button.primary:disabled { opacity: .55; cursor: default; }
+  label.link { color: var(--accent); cursor: pointer; font-size: 15px; text-decoration: underline; margin-left: 4px; }
+  #file { display: none; }
+  .status { margin-top: 10px; min-height: 24px; color: var(--muted); font-size: 15px; }
+  .error { color: var(--warn); background: var(--warn-soft); padding: 8px 12px; border-radius: 8px; display: inline-block; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -2px; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none; }
+  .result-grid { display: grid; grid-template-columns: 200px 1fr; gap: 28px; align-items: center; }
+  @media (max-width: 720px) { .result-grid { grid-template-columns: 1fr; } }
+  .total { text-align: center; }
+  .total .num { font-size: 72px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .total .den { color: var(--muted); font-size: 16px; }
+  .total .lab { margin-top: 6px; font-weight: 700; }
+  .bar-row { display: grid; grid-template-columns: 92px 1fr 40px; align-items: center; gap: 10px; margin: 9px 0; }
+  .bar-track { height: 12px; background: #ece9e3; border-radius: 999px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width .6s ease; }
+  .bar-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .note { color: var(--muted); font-size: 13.5px; }
+  .badge { display: inline-block; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; }
+  .badge.ai { background: var(--accent-soft); color: var(--accent); }
+  .badge.rule { background: #eeeae3; color: var(--muted); }
+  .summary { font-size: 18px; margin: 4px 0 14px; }
+  ul.tips { margin: 0 0 14px; padding-left: 20px; }
+  ul.tips li { margin: 6px 0; }
+  .caution { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 10px 14px; font-size: 14.5px; }
+  .sources { margin-top: 12px; font-size: 13.5px; color: var(--muted); }
+  .sources div { margin: 2px 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 10px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-size: 14px; font-weight: 600; }
+  tr.new td { background: var(--accent-soft); font-weight: 700; }
+  td.total-c { font-weight: 700; color: var(--accent); }
+  .chart-box { margin-top: 4px; }
+  footer { color: var(--muted); font-size: 13.5px; text-align: center; margin-top: 26px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Mirror <span>Me</span></h1>
+    <div><span class="sub">AI 피부 분석 · 시연 화면</span> <span class="chip" id="userChip">시연 계정</span></div>
+  </header>
+
+  <section class="card">
+    <h2>피부 분석</h2>
+    <div class="row">
+      <div class="thumb-wrap">
+        <img class="thumb" id="thumb" src="/demo/sample.jpg" alt="시연용 샘플 사진" onerror="this.style.visibility='hidden'">
+        <div id="thumbLabel">시연용 샘플 사진</div>
+      </div>
+      <div>
+        <button class="primary" id="btnSample">샘플 사진으로 분석하기</button>
+        <label class="link" for="file">다른 사진 선택</label>
+        <input type="file" id="file" accept="image/*">
+        <div class="status" id="status"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card hidden" id="result">
+    <h2>분석 결과</h2>
+    <div class="result-grid">
+      <div class="total">
+        <div><span class="num" id="totalNum">-</span><span class="den"> / 100</span></div>
+        <div class="lab">종합 점수</div>
+        <div class="note">높을수록 양호</div>
+      </div>
+      <div>
+        <div id="bars"></div>
+        <div class="note">항목별 점수는 감점 기준입니다. 낮을수록 양호합니다.</div>
+      </div>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+    <h2>분석 리포트 <span class="badge" id="badge"></span></h2>
+    <div class="summary" id="summary"></div>
+    <ul class="tips" id="tips"></ul>
+    <div class="caution" id="caution"></div>
+    <div class="sources" id="sources"></div>
+  </section>
+
+  <section class="card">
+    <h2>분석 기록</h2>
+    <div class="chart-box" id="chart"></div>
+    <table>
+      <thead>
+        <tr><th>일시</th><th>종합</th><th>여드름</th><th>모공</th><th>색소침착</th><th>피지</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="note" id="historyNote" style="margin-top:8px"></div>
+  </section>
+
+  <footer>시연용 샘플 사진 기반 결과이며, 의학적 진단을 대체하지 않습니다.</footer>
+</div>
+
+<script>
+const USER_ID = "demo-user";
+const ORDER = [["acne", "여드름"], ["pore", "모공"], ["pigmentation", "색소침착"], ["sebum", "피지"]];
+const $ = (id) => document.getElementById(id);
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function parseUtc(s) { return new Date(String(s).replace(" ", "T") + "Z"); }
+function fmtDate(s) {
+  return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }).format(parseUtc(s));
+}
+function fmtShort(s) {
+  return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric" }).format(parseUtc(s)).replace(/\s/g, "");
+}
+
+function setBusy(busy, msg) {
+  $("btnSample").disabled = busy;
+  const st = $("status");
+  st.textContent = "";
+  if (busy) {
+    st.appendChild(el("span", "spinner"));
+    st.appendChild(document.createTextNode(msg || "분석 중입니다…"));
+  }
+}
+function showError(msg) {
+  const st = $("status");
+  st.textContent = "";
+  st.appendChild(el("span", "error", msg));
+}
+
+function renderResult(data) {
+  $("result").classList.remove("hidden");
+  $("totalNum").textContent = data.total_score;
+
+  const bars = $("bars");
+  bars.textContent = "";
+  ORDER.forEach(([key, label]) => {
+    const v = Math.max(0, Math.min(100, Number(data.scores[key])));
+    const row = el("div", "bar-row");
+    row.appendChild(el("div", "", label));
+    const track = el("div", "bar-track");
+    const fill = el("div", "bar-fill");
+    fill.style.width = "0%";
+    track.appendChild(fill);
+    row.appendChild(track);
+    row.appendChild(el("div", "bar-val", String(data.scores[key])));
+    bars.appendChild(row);
+    requestAnimationFrame(() => { fill.style.width = v + "%"; });
+  });
+
+  const report = data.llm_report;
+  const meta = data.llm_metadata || {};
+  const badge = $("badge");
+  if (meta.source === "openai") {
+    badge.className = "badge ai";
+    badge.textContent = "AI 생성 · " + (meta.model || "LLM");
+  } else {
+    badge.className = "badge rule";
+    badge.textContent = "규칙 기반 리포트 (LLM 미사용)";
+  }
+
+  $("summary").textContent = report ? report.summary : "리포트를 불러오지 못했습니다.";
+  const tips = $("tips");
+  tips.textContent = "";
+  ((report && report.care_tips) || []).forEach((t) => tips.appendChild(el("li", "", t)));
+  const caution = $("caution");
+  caution.textContent = report && report.caution ? report.caution : "";
+  caution.classList.toggle("hidden", !(report && report.caution));
+
+  const src = $("sources");
+  src.textContent = "";
+  const seen = new Set();
+  const list = [];
+  (meta.sources || []).forEach((s) => {
+    if (!seen.has(s.title)) { seen.add(s.title); list.push(s); }
+  });
+  if (list.length) {
+    src.appendChild(el("div", "", "참고 출처"));
+    list.forEach((s) => src.appendChild(el("div", "", "· " + s.publisher + " — " + s.title)));
+  }
+}
+
+function renderChart(rows) {
+  const box = $("chart");
+  box.textContent = "";
+  if (rows.length < 2) {
+    box.appendChild(el("div", "note", "기록이 2건 이상이면 종합 점수 변화 그래프가 표시됩니다."));
+    return;
+  }
+  const NS = "http://www.w3.org/2000/svg";
+  const W = 700, H = 190, L = 34, R = 20, T = 26, B = 30;
+  const vals = rows.map((r) => r.score_total);
+  const lo = Math.max(0, Math.min(...vals) - 6), hi = Math.min(100, Math.max(...vals) + 6);
+  const x = (i) => L + (i * (W - L - R)) / (rows.length - 1);
+  const y = (v) => T + ((hi - v) * (H - T - B)) / (hi - lo || 1);
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "종합 점수 변화 그래프");
+
+  [lo, (lo + hi) / 2, hi].forEach((g) => {
+    const ln = document.createElementNS(NS, "line");
+    ln.setAttribute("x1", L); ln.setAttribute("x2", W - R);
+    ln.setAttribute("y1", y(g)); ln.setAttribute("y2", y(g));
+    ln.setAttribute("stroke", "#e4e0d9"); ln.setAttribute("stroke-width", "1");
+    svg.appendChild(ln);
+    const tx = document.createElementNS(NS, "text");
+    tx.setAttribute("x", L - 6); tx.setAttribute("y", y(g) + 4);
+    tx.setAttribute("text-anchor", "end"); tx.setAttribute("font-size", "11"); tx.setAttribute("fill", "#6a767b");
+    tx.textContent = Math.round(g);
+    svg.appendChild(tx);
+  });
+
+  const pl = document.createElementNS(NS, "polyline");
+  pl.setAttribute("points", rows.map((r, i) => `${x(i)},${y(r.score_total)}`).join(" "));
+  pl.setAttribute("fill", "none"); pl.setAttribute("stroke", "#2f7d6b"); pl.setAttribute("stroke-width", "3");
+  pl.setAttribute("stroke-linejoin", "round"); pl.setAttribute("stroke-linecap", "round");
+  svg.appendChild(pl);
+
+  rows.forEach((r, i) => {
+    const c = document.createElementNS(NS, "circle");
+    c.setAttribute("cx", x(i)); c.setAttribute("cy", y(r.score_total)); c.setAttribute("r", i === rows.length - 1 ? 6 : 4.5);
+    c.setAttribute("fill", "#2f7d6b"); c.setAttribute("stroke", "#fff"); c.setAttribute("stroke-width", "2");
+    svg.appendChild(c);
+    const v = document.createElementNS(NS, "text");
+    v.setAttribute("x", x(i)); v.setAttribute("y", y(r.score_total) - 11);
+    v.setAttribute("text-anchor", "middle"); v.setAttribute("font-size", "13"); v.setAttribute("font-weight", "700"); v.setAttribute("fill", "#1f2a2e");
+    v.textContent = r.score_total;
+    svg.appendChild(v);
+    const d = document.createElementNS(NS, "text");
+    d.setAttribute("x", x(i)); d.setAttribute("y", H - 8);
+    d.setAttribute("text-anchor", "middle"); d.setAttribute("font-size", "11"); d.setAttribute("fill", "#6a767b");
+    d.textContent = fmtShort(r.created_at);
+    svg.appendChild(d);
+  });
+  box.appendChild(svg);
+}
+
+function renderTable(rowsDesc, highlightNewest) {
+  const tb = $("rows");
+  tb.textContent = "";
+  rowsDesc.forEach((r, i) => {
+    const tr = el("tr", highlightNewest && i === 0 ? "new" : "");
+    tr.appendChild(el("td", "", fmtDate(r.created_at)));
+    tr.appendChild(el("td", "total-c", String(r.score_total)));
+    tr.appendChild(el("td", "", String(r.score_acne)));
+    tr.appendChild(el("td", "", String(r.score_pore)));
+    tr.appendChild(el("td", "", String(r.score_pigmentation)));
+    tr.appendChild(el("td", "", String(r.score_sebum)));
+    tb.appendChild(tr);
+  });
+  $("historyNote").textContent = rowsDesc.length
+    ? "총 " + rowsDesc.length + "건 · 항목 점수는 감점 기준(낮을수록 양호)"
+    : "아직 기록이 없습니다. 위에서 분석을 실행해 보세요.";
+}
+
+async function loadHistory(highlightNewest) {
+  try {
+    const res = await fetch("/history/" + USER_ID);
+    const data = await res.json();
+    const rows = data.history || [];
+    renderChart(rows);
+    renderTable(rows.slice().reverse(), highlightNewest);
+  } catch (e) {
+    $("historyNote").textContent = "기록을 불러오지 못했습니다.";
+  }
+}
+
+async function runAnalysis(getFile) {
+  setBusy(true, "분석 중입니다… (AI 리포트 생성에 몇 초 걸릴 수 있어요)");
+  try {
+    const file = await getFile();
+    const fd = new FormData();
+    fd.append("image", file, file.name || "sample.jpg");
+    fd.append("user_id", USER_ID);
+    const res = await fetch("/analyze-skin", { method: "POST", body: fd });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data || !data.success) {
+      throw new Error((data && data.message) || "서버 오류 (" + res.status + ")");
+    }
+    renderResult(data);
+    await loadHistory(true);
+    $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+    setBusy(false);
+  } catch (e) {
+    setBusy(false);
+    showError("분석에 실패했습니다: " + e.message);
+  }
+}
+
+$("btnSample").addEventListener("click", () => runAnalysis(async () => {
+  const r = await fetch("/demo/sample.jpg");
+  if (!r.ok) throw new Error("샘플 사진을 찾을 수 없습니다 (backend/test_selfie.jpg)");
+  return await r.blob();
+}));
+
+$("file").addEventListener("change", (ev) => {
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  $("thumb").style.visibility = "visible";
+  $("thumb").src = URL.createObjectURL(f);
+  $("thumbLabel").textContent = "선택한 사진";
+  runAnalysis(async () => f);
+  ev.target.value = "";
+});
+
+loadHistory(false);
+</script>
+</body>
+</html>
