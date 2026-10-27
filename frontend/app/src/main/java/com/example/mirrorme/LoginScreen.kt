@@ -1,5 +1,6 @@
 package com.example.mirrorme
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -20,15 +22,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mirrorme.ui.theme.MirrorMeTheme
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onLoginClick: () -> Unit = {},
-    onGoogleLoginClick: () -> Unit = {}
+    onLoginClick: (String, String) -> Unit = { _, _ -> },
+    onSignUpClick: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -113,74 +120,77 @@ fun LoginScreen(
 
         // 계속 버튼
         Button(
-            onClick = onLoginClick,
+            onClick = {
+                if (email.isBlank() || password.isBlank()) {
+                    Toast.makeText(context, "이메일과 비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    return@Button
+                }
+                isLoading = true
+                val loginData = mapOf(
+                    "email" to email,
+                    "password" to password
+                )
+                RetrofitClient.service.login(loginData).enqueue(object : Callback<Map<String, Any>> {
+                    override fun onResponse(call: Call<Map<String, Any>>, response: Response<Map<String, Any>>) {
+                        isLoading = false
+                        if (response.isSuccessful && response.body()?.get("success") == true) {
+                            val userId = response.body()?.get("user_id") as? String ?: "guest"
+                            val nickname = response.body()?.get("nickname") as? String ?: ""
+                            Toast.makeText(context, "${nickname}님 환영합니다!", Toast.LENGTH_SHORT).show()
+                            onLoginClick(userId, nickname)
+                        } else {
+                            val message = response.body()?.get("message") as? String ?: "로그인 실패"
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onFailure(call: Call<Map<String, Any>>, t: Throwable) {
+                        isLoading = false
+                        Toast.makeText(context, "네트워크 오류: ${t.localizedMessage}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
+            enabled = !isLoading,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
             shape = RoundedCornerShape(8.dp)
         ) {
-            Text(
-                text = "계속",
-                fontFamily = MM_Font,
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            } else {
+                Text(
+                    text = "계속",
+                    fontFamily = MM_Font,
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // 구분선 (Divider with "또는")
+        // 회원가입 유도
         Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            HorizontalDivider(
-                modifier = Modifier.weight(1f),
-                thickness = 1.dp,
-                color = Color.LightGray.copy(alpha = 0.5f)
-            )
             Text(
-                text = "또는",
-                modifier = Modifier.padding(horizontal = 16.dp),
+                text = "계정이 없으신가요?",
+                fontFamily = MM_Font,
                 color = Color.Gray,
-                fontSize = 14.sp,
-                fontFamily = MM_Font
+                fontSize = 14.sp
             )
-            HorizontalDivider(
-                modifier = Modifier.weight(1f),
-                thickness = 1.dp,
-                color = Color.LightGray.copy(alpha = 0.5f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // 구글 로그인 버튼
-        Button(
-            onClick = onGoogleLoginClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEEEEE)),
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // 구글 아이콘이 있다면 여기에 추가 (현재는 텍스트만)
-                // Icon(painter = painterResource(id = R.drawable.ic_google), ...)
+            TextButton(onClick = onSignUpClick) {
                 Text(
-                    text = "G ",
-                    color = Color(0xFF4285F4), // 구글 블루
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                Text(
-                    text = "Google 계정으로 계속하기",
+                    text = "회원가입",
                     fontFamily = MM_Font,
                     color = Color.Black,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
                 )
             }
         }

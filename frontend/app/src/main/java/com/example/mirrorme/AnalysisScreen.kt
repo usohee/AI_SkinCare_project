@@ -2,7 +2,10 @@ package com.example.mirrorme
 
 import com.example.mirrorme.R
 import android.content.Context
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -74,25 +77,26 @@ private val LightGray = Color(0xFFF5F5F5)
 @Composable
 fun AnalysisScreen(
     viewModel: SkinViewModel,
+    userId: String? = null,
     onNavigateToResult: (SkinAnalysisResponse) -> Unit = {},
-    onNavigateToHistory: (String) -> Unit = {}
+    onNavigateToHistory: (SkinAnalysisResponse) -> Unit = {}, // String 대신 객체 전달
+    onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val analysisState by viewModel.analysisState.collectAsState()
-    
+    val historyItems by viewModel.historyItems.collectAsState()
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.analyzeSkin(context, uri, userId)
+        }
+    }
+
     var showGuidance by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
-
-    // 히스토리 데이터 정의
-    val historyItems = remember {
-        listOf(
-            "2024-04-27",
-            "2024-04-11",
-            "2024-03-15",
-            "2024-02-28"
-        )
-    }
 
     LaunchedEffect(analysisState) {
         if (analysisState is AnalysisState.Success) {
@@ -157,7 +161,7 @@ fun AnalysisScreen(
                 Button(
                     onClick = {
                         showGuidance = false
-                        viewModel.analyzeSkin(context, null) // null pass will use sample image in VM
+                        launcher.launch("image/*")
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -199,14 +203,14 @@ fun AnalysisScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showLogoutDialog = false
-                    // 실제 로그아웃 로직 처리
+                    onLogout()
                 }) {
-                    Text("취소", color = DeepGreen, fontFamily = MM_Font, fontWeight = FontWeight.Bold)
+                    Text("확인", color = DeepGreen, fontFamily = MM_Font, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("확인", color = Color.Gray, fontFamily = MM_Font)
+                    Text("취소", color = Color.Gray, fontFamily = MM_Font)
                 }
             },
             containerColor = Color.White,
@@ -296,7 +300,11 @@ fun AnalysisScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onNavigateToHistory(historyItems.first()) }
+                    .clickable { 
+                        if (historyItems.isNotEmpty()) {
+                            onNavigateToHistory(historyItems.first())
+                        }
+                    }
                     .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -322,8 +330,8 @@ fun AnalysisScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(bottom = 8.dp)
             ) {
-                items(historyItems) { dateString ->
-                    HistoryCard(date = dateString, onClick = onNavigateToHistory)
+                items(historyItems) { response ->
+                    HistoryCard(response = response, onClick = onNavigateToHistory)
                 }
             }
 
@@ -380,7 +388,8 @@ fun GuidanceImage(modifier: Modifier = Modifier, resId: Int?) {
 }
 
 @Composable
-fun HistoryCard(date: String, onClick: (String) -> Unit) {
+fun HistoryCard(response: SkinAnalysisResponse, onClick: (SkinAnalysisResponse) -> Unit) {
+    val date = response.date ?: "0000-00-00"
     // 날짜 포맷팅: "2024-04-27" -> "04.27" & "2024"
     val parts = date.split("-")
     val year = parts.getOrNull(0) ?: ""
@@ -391,7 +400,7 @@ fun HistoryCard(date: String, onClick: (String) -> Unit) {
             .size(150.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(DeepGreen)
-            .clickable { onClick(date) }
+            .clickable { onClick(response) }
             .padding(20.dp),
         contentAlignment = Alignment.BottomStart
     ) {
@@ -478,6 +487,6 @@ fun prepareImageFile(context: Context): File {
 @Composable
 fun AnalysisScreenPreview() {
     MirrorMeTheme {
-        AnalysisScreen()
+        AnalysisScreen(viewModel = SkinViewModel())
     }
 }

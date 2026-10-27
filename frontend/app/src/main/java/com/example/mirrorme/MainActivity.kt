@@ -13,12 +13,16 @@ import androidx.compose.ui.Modifier
 import com.example.mirrorme.ui.theme.MirrorMeTheme
 
 sealed interface Screen {
+    object Login : Screen
+    object SignUp : Screen
     object Analysis : Screen
     data class Report(val response: SkinAnalysisResponse) : Screen
 }
 
 class MainActivity : ComponentActivity() {
     private val viewModel: SkinViewModel by viewModels()
+    private var loggedInUserId: String? = null
+    private var loggedInNickname: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,33 +33,46 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var currentScreen by remember { mutableStateOf<Screen>(Screen.Analysis) }
+                    var currentScreen by remember { mutableStateOf<Screen>(Screen.Login) }
 
                     when (val screen = currentScreen) {
+                        is Screen.Login -> {
+                            LoginScreen(
+                                onLoginClick = { userId, nickname ->
+                                    loggedInUserId = userId
+                                    loggedInNickname = nickname
+                                    viewModel.fetchHistory(userId) // 서버에서 해당 사용자의 히스토리 가져오기
+                                    currentScreen = Screen.Analysis 
+                                },
+                                onSignUpClick = { currentScreen = Screen.SignUp }
+                            )
+                        }
+                        is Screen.SignUp -> {
+                            SignUpScreen(
+                                onBackToLogin = { currentScreen = Screen.Login },
+                                onSignUpComplete = { userId, nickname ->
+                                    loggedInUserId = userId
+                                    loggedInNickname = nickname
+                                    viewModel.clearHistory() // 신규 사용자는 히스토리 비움
+                                    currentScreen = Screen.Analysis 
+                                }
+                            )
+                        }
                         is Screen.Analysis -> {
                             AnalysisScreen(
                                 viewModel = viewModel,
+                                userId = loggedInUserId,
                                 onNavigateToResult = { response ->
                                     currentScreen = Screen.Report(response)
                                 },
-                                onNavigateToHistory = { date ->
-                                    // 해당 날짜에 맞는 더미 데이터 생성하여 ReportScreen으로 이동
-                                    val dummyResponse = SkinAnalysisResponse(
-                                        success = true,
-                                        totalScore = when(date) {
-                                            "2024-04-27" -> 78
-                                            "2024-04-11" -> 72
-                                            "2024-03-15" -> 65
-                                            else -> 60
-                                        },
-                                        scores = SkinDetails(acne = 75, pigmentation = 60, pore = 70, sebum = 55),
-                                        llmReport = LlmReport(
-                                            summary = "과거 기록($date)에 따른 피부 상태 리포트입니다. 전반적으로 양호한 상태를 유지하고 있습니다.",
-                                            indicators = emptyMap(),
-                                            careTipIds = emptyList()
-                                        )
-                                    )
-                                    currentScreen = Screen.Report(dummyResponse)
+                                onNavigateToHistory = { response ->
+                                    currentScreen = Screen.Report(response)
+                                },
+                                onLogout = {
+                                    viewModel.logout() // ViewModel 상태 초기화
+                                    loggedInUserId = null
+                                    loggedInNickname = null
+                                    currentScreen = Screen.Login
                                 }
                             )
                         }

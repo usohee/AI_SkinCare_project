@@ -561,10 +561,22 @@ def get_history(user_id):
     history = []
     for row in rows:
         h = dict(row)
+        # 프론트엔드 SkinAnalysisResponse 구조에 맞게 매핑
+        h["success"] = True
+        h["total_score"] = h.pop("score_total")
+        h["scores"] = {
+            "acne": h.pop("score_acne"),
+            "pore": h.pop("score_pore"),
+            "pigmentation": h.pop("score_pigmentation"),
+            "sebum": h.pop("score_sebum")
+        }
+        # date 필드 추가 (created_at 활용)
+        h["date"] = h.pop("created_at").split(" ")[0] if h.get("created_at") else "0000-00-00"
+
         h["raw_values"] = json.loads(h["raw_values"]) if h["raw_values"] else {}
         h["recommendations"] = json.loads(h["recommendations"]) if h.get("recommendations") else []
 
-        # llm_report 필드가 JSON 문자열로 저장되어 있을 수 있으므로 처리
+        # llm_report 필드 처리
         try:
             stored = json.loads(h["llm_report"]) if h["llm_report"] else None
             if isinstance(stored, dict):
@@ -575,7 +587,6 @@ def get_history(user_id):
             else:
                 h["llm_report"] = str(stored) if stored else "리포트가 없습니다."
         except:
-            # 순수 문자열인 경우
             pass
 
         history.append(h)

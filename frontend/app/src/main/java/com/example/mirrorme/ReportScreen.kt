@@ -75,19 +75,19 @@ fun ReportScreen(
             )
 
             // 2. AI 어드바이스 섹션
-            AdviceSection(response.llmReport?.summary)
+            AdviceSection(response.llmReport)
 
             Spacer(modifier = Modifier.height(24.dp))
             HorizontalDivider(thickness = 8.dp, color = Color(0xFFF5F5F5))
 
-            // 3. 분석 상세 (점수 기반)
-            DetailScoresSection(response.scores)
+            // 3. 추천 제품 섹션 (항목)
+            ProductSection(response.recommendations)
 
             Spacer(modifier = Modifier.height(24.dp))
             HorizontalDivider(thickness = 8.dp, color = Color(0xFFF5F5F5))
 
-            // 4. 추천 제품 섹션 (현재 목업 유지 또는 고도화)
-            ProductSection()
+            // 4. 피부 변화 추이 (꺾은선 그래프)
+            ChartSection()
 
             Spacer(modifier = Modifier.height(30.dp))
         }
@@ -212,7 +212,7 @@ fun ScoreProgressBar(label: String, score: Int, color: Color) {
 }
 
 @Composable
-fun ProductSection() {
+fun ProductSection(recommendations: List<Recommendation>?) {
     Column(modifier = Modifier.padding(20.dp)) {
         Text(
             text = "항목",
@@ -222,20 +222,24 @@ fun ProductSection() {
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
-        ProductItem(
-            brand = "닥터지",
-            name = "닥터지 레드블레미쉬 클리어 수딩크림EX 70ml 1+1 기획세트",
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        ProductItem(
-            brand = "셀퓨전씨",
-            name = "셀퓨전씨 포스트 알파 쿨링 마스크 1P (퍼스트 쿨링 마스크)",
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        ProductItem(
-            brand = "아토팜",
-            name = "아토팜 판테놀 로션 180ml",
-        )
+        if (recommendations.isNullOrEmpty()) {
+            Text(
+                text = "추천 제품이 없습니다.",
+                fontFamily = MM_Font,
+                fontSize = 15.sp,
+                color = Color.Gray
+            )
+        } else {
+            recommendations.forEachIndexed { index, recommendation ->
+                ProductItem(
+                    brand = recommendation.brand,
+                    name = recommendation.name,
+                )
+                if (index < recommendations.size - 1) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
+        }
     }
 }
 

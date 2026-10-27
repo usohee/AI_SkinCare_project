@@ -26,6 +26,35 @@ class SkinViewModel : ViewModel() {
     private val _analysisState = MutableStateFlow<AnalysisState>(AnalysisState.Idle)
     val analysisState: StateFlow<AnalysisState> = _analysisState
 
+    private val _historyItems = MutableStateFlow<List<SkinAnalysisResponse>>(emptyList())
+    val historyItems: StateFlow<List<SkinAnalysisResponse>> = _historyItems
+
+    fun fetchHistory(userId: String?) {
+        if (userId == null || userId == "guest") {
+            _historyItems.value = emptyList()
+            return
+        }
+        
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.service.getHistory(userId).awaitResponse()
+                if (response.isSuccessful && response.body() != null) {
+                    _historyItems.value = response.body()!!.history
+                } else {
+                    // 에러 발생 시 히스토리 비움
+                    _historyItems.value = emptyList()
+                }
+            } catch (e: Exception) {
+                _historyItems.value = emptyList()
+            }
+        }
+    }
+
+    fun initializeHistory() {
+        // 기존 하드코딩된 더미 데이터 제거
+        _historyItems.value = emptyList()
+    }
+
     fun analyzeSkin(context: Context, imageUri: Uri?, userId: String? = null) {
         viewModelScope.launch {
             _analysisState.value = AnalysisState.Loading
@@ -44,12 +73,23 @@ class SkinViewModel : ViewModel() {
 
                 val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
                 val body = MultipartBody.Part.createFormData("image", file.name, requestFile)
-                val userIdPart = userId?.toRequestBody("text/plain".toMediaTypeOrNull())
+                
+                val finalUserId = userId ?: "guest"
+                val userIdPart = finalUserId.toRequestBody("text/plain".toMediaTypeOrNull())
 
                 val response = RetrofitClient.service.analyzeSkin(body, userIdPart).awaitResponse()
 
                 if (response.isSuccessful && response.body() != null) {
-                    _analysisState.value = AnalysisState.Success(response.body()!!)
+                    val result = response.body()!!
+                    
+                    // 현재 날짜를 포함한 결과 생성 (서버에서 date를 안 준다면 클라이언트에서 추가)
+                    val currentDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                    val resultWithDate = result.copy(date = result.date ?: currentDate)
+                    
+                    _analysisState.value = AnalysisState.Success(resultWithDate)
+                    
+                    // 분석 성공 시 히스토리에 전체 객체 추가
+                    _historyItems.value = listOf(resultWithDate) + _historyItems.value
                 } else {
                     _analysisState.value = AnalysisState.Error("분석 실패: ${response.code()}")
                 }
@@ -57,6 +97,15 @@ class SkinViewModel : ViewModel() {
                 _analysisState.value = AnalysisState.Error("네트워크 오류: ${e.localizedMessage}")
             }
         }
+    }
+
+    fun clearHistory() {
+        _historyItems.value = emptyList()
+    }
+
+    fun logout() {
+        _historyItems.value = emptyList()
+        _analysisState.value = AnalysisState.Idle
     }
 
     fun resetState() {
