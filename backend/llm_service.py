@@ -10,13 +10,30 @@ if __package__:
     from .llm.knowledge import select_guidelines, public_sources
     from .llm.prompts import build_prompts, output_schema, PROMPT_VERSION
     from .llm.provider import request_report, ProviderError
+    from .llm.provider_anthropic import request_report as request_report_anthropic
     from .llm.output import validate_output, fallback_report
 else:
     from llm.contracts import InputError, OutputError, validate_input, interpret
     from llm.knowledge import select_guidelines, public_sources
     from llm.prompts import build_prompts, output_schema, PROMPT_VERSION
     from llm.provider import request_report, ProviderError
+    from llm.provider_anthropic import request_report as request_report_anthropic
     from llm.output import validate_output, fallback_report
+
+
+def _resolve_provider():
+    """사용할 LLM 제공자를 고른다.
+
+    LLM_PROVIDER=anthropic|openai 로 직접 지정하면 그 값을 쓴다.
+    지정하지 않으면 ANTHROPIC_API_KEY가 있을 때 Claude, 아니면 OpenAI를 쓴다.
+    반환: (제공자 이름, API 키, 모델 이름, 요청 함수)
+    """
+    name = os.getenv("LLM_PROVIDER", "").strip().lower()
+    if name not in ("anthropic", "openai"):
+        name = "anthropic" if os.getenv("ANTHROPIC_API_KEY", "").strip() else "openai"
+    if name == "anthropic":
+        return name, os.getenv("ANTHROPIC_API_KEY", "").strip(), os.getenv("ANTHROPIC_MODEL", "").strip(), request_report_anthropic
+    return name, os.getenv("OPENAI_API_KEY", "").strip(), os.getenv("OPENAI_MODEL", "").strip(), request_report
 
 
 def generate_report(analysis_data, *, mode="auto"):
@@ -26,7 +43,7 @@ def generate_report(analysis_data, *, mode="auto"):
     입력 오류는 report=None이며 가짜 피부 리포트를 만들지 않는다.
     """
     meta = {"source": "none", "llm_success": False, "llm_attempted": False, "model": None,
-            "prompt_version": PROMPT_VERSION, "knowledge_version": None, "warnings": [],
+            "prompt_version": PROMPT_VERSION, "knowledge_version": None, "warnings": [], "provider": None,
             "fallback_reason": None, "sources": [], "priority_indicators": []}
     result = {"success": False, "report": None, "metadata": meta, "error": None}
     if mode not in ("auto", "offline", "llm"):
@@ -49,8 +66,8 @@ def generate_report(analysis_data, *, mode="auto"):
         return result
     reason = "OFFLINE_MODE"
     if mode != "offline":
-        key = os.getenv("OPENAI_API_KEY", "").strip()
-        model = os.getenv("OPENAI_MODEL", "").strip()
+        provider, key, model, request = _resolve_provider()
+        meta["provider"] = provider
         if not key:
             reason = "MISSING_API_KEY"
         elif not model:
@@ -60,7 +77,7 @@ def generate_report(analysis_data, *, mode="auto"):
             meta["llm_attempted"] = True
             system, user = build_prompts(data, facts, guidelines)
             try:
-                candidate = request_report(system, user, output_schema(guidelines), api_key=key, model=model)
+                candidate = request(system, user, output_schema(guidelines), api_key=key, model=model)
                 report, ids = validate_output(candidate, facts, guidelines)
                 result.update(success=True, report=report)
                 meta.update(source="llm", llm_success=True, sources=public_sources([e for e in guidelines if e["id"] in ids]))

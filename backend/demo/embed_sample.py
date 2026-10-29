@@ -66,7 +66,7 @@ def post_image(api, path):
 
 
 def to_recorded(resp):
-    report = resp.get("llm_report") or {}
+    report = resp.get("llm_report_data") or (resp.get("llm_report") if isinstance(resp.get("llm_report"), dict) else {}) or {}
     meta = resp.get("llm_metadata") or {}
     scores = resp["scores"]
     return {

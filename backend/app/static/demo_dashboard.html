@@ -183,10 +183,10 @@ function renderResult(data) {
     requestAnimationFrame(() => { fill.style.width = v + "%"; });
   });
 
-  const report = data.llm_report;
+  const report = data.llm_report_data || (data.llm_report && typeof data.llm_report === "object" ? data.llm_report : null);
   const meta = data.llm_metadata || {};
   const badge = $("badge");
-  if (meta.source === "openai") {
+  if ((meta.source === "llm" || meta.source === "openai")) {
     badge.className = "badge ai";
     badge.textContent = "AI 생성 · " + (meta.model || "LLM");
   } else {
@@ -292,7 +292,7 @@ function renderTable(rowsDesc, highlightNewest) {
 
 async function loadHistory(highlightNewest) {
   try {
-    const res = await fetch("/history/" + USER_ID);
+    const res = await fetch("/history/" + USER_ID + "?order=asc");
     const data = await res.json();
     const rows = data.history || [];
     renderChart(rows);

@@ -44,14 +44,18 @@ def test_analyze_and_history(client, jpeg_bytes):
     assert body["success"] and body["user_id"] == "u1"
     assert set(body["scores"]) == {"acne", "pore", "pigmentation", "sebum"}
     assert 0 <= body["total_score"] <= 100
-    assert body["llm_report"]["summary"]
+    assert isinstance(body["llm_report"], str) and "종합 점수는" in body["llm_report"]   # 앱 화면용 글
+    assert body["llm_report_data"]["summary"]                                          # 구조화된 같은 내용
     assert body["llm_metadata"]["source"] == "fallback"
+    assert body["recommendations"] and body["recommendations"][0]["image_url"].startswith("http://localhost/product-image/")
 
     _post_image(client, jpeg_bytes)
     hist = client.get("/history/u1").get_json()["history"]
     assert len(hist) == 2
-    assert hist[0]["llm_report"]["summary"]            # /analyze-skin 과 같은 모양으로 평탄화
+    assert "종합 점수는" in hist[0]["llm_report"]         # /analyze-skin 과 같은 글
+    assert hist[0]["llm_report_data"]["summary"]
     assert hist[0]["llm_metadata"]["source"] == "fallback"
+    assert hist[0]["total_score"] == hist[0]["score_total"] and set(hist[0]["scores"]) == {"acne", "pigmentation", "pore", "sebum"}
     assert client.get("/history/nobody").get_json()["history"] == []
 
 
@@ -89,5 +93,8 @@ def test_demo_seed_and_login(client):
     seeded = client.post("/demo/seed").get_json()
     assert seeded["seeded"] == 4
     hist = client.get("/history/demo-user").get_json()["history"]
-    assert [h["score_total"] for h in hist] == [54, 57, 60, 62]
+    assert [h["score_total"] for h in hist] == [62, 60, 57, 54]          # 최신순(앱 기본)
+    asc = client.get("/history/demo-user?order=asc").get_json()["history"]
+    assert [h["score_total"] for h in asc] == [54, 57, 60, 62]
+    assert hist[0]["date"] and hist[0]["recommendations"]               # 예전 기록도 추천 제품이 채워진다
     assert client.get("/demo").status_code == 200

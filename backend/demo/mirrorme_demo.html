@@ -333,7 +333,7 @@ async function tryConnect(base) {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), 2500);
   try {
-    const r = await fetch(base + "/history/" + USER_ID_DEFAULT, { signal: ctl.signal });
+    const r = await fetch(base + "/history/" + USER_ID_DEFAULT + "?order=asc", { signal: ctl.signal });
     const d = await r.json();
     if (!r.ok || !d.success) return false;
     state.mode = "live"; state.base = base; state.history = d.history || [];
@@ -341,7 +341,7 @@ async function tryConnect(base) {
   } catch (e) { return false; } finally { clearTimeout(t); }
 }
 async function refreshHistory() {
-  const r = await api("/history/" + state.userId);
+  const r = await api("/history/" + state.userId + "?order=asc");
   const d = await r.json();
   if (d.success) state.history = d.history || [];
 }
@@ -442,7 +442,7 @@ function openReport(idx) {
   $("#rCount").textContent = state.history.filter((x) => kst(x.created_at).year === yr).length + "회";
 
   const adv = $("#rAdvice"); adv.textContent = "";
-  const rep = r.llm_report;
+  const rep = r.llm_report_data || (r.llm_report && typeof r.llm_report === "object" ? r.llm_report : null);
   const p1 = document.createElement("p");
   if (rep && rep.summary) {
     p1.textContent = rep.summary; adv.appendChild(p1);
@@ -453,7 +453,7 @@ function openReport(idx) {
     }
     const meta = r.llm_metadata || {};
     const s = document.createElement("div"); s.className = "src";
-    s.textContent = meta.source === "openai" ? "AI 생성 리포트 (" + (meta.model || "LLM") + ")" : "규칙 기반 리포트";
+    s.textContent = (meta.source === "llm" || meta.source === "openai") ? "AI 생성 리포트 (" + (meta.model || "LLM") + ")" : "규칙 기반 리포트";
     adv.appendChild(s);
   } else {
     p1.textContent = "종합 점수는 " + r.score_total + "점입니다. 이번 분석에서는 " + warnK[1] + " 항목의 감점이 상대적으로 큽니다.";

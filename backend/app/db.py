@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS skin_analyses (
     raw_values TEXT,
     bbox_coordinates TEXT,
     llm_report TEXT,
+    recommendations TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
@@ -54,10 +55,19 @@ CREATE TABLE IF NOT EXISTS user_cabinets (
 """
 
 
+def _ensure_columns(conn):
+    """이미 만들어진 skincare.db에도 새 컬럼이 생기도록 한다."""
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(skin_analyses)")}
+    for name in ("llm_report", "recommendations"):
+        if name not in cols:
+            conn.execute(f"ALTER TABLE skin_analyses ADD COLUMN {name} TEXT")
+
+
 def init_db(db_path):
     conn = sqlite3.connect(db_path)
     try:
         conn.executescript(SCHEMA)
+        _ensure_columns(conn)
         conn.commit()
     finally:
         conn.close()

@@ -12,8 +12,8 @@ from app import create_app  # noqa: E402
 @pytest.fixture(autouse=True)
 def _no_llm_key(monkeypatch):
     # 테스트는 실제 OpenAI를 호출하지 않는다 → 규칙 기반 리포트로 동작
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-    monkeypatch.delenv("OPENAI_MODEL", raising=False)
+    for name in ("OPENAI_API_KEY", "OPENAI_MODEL", "ANTHROPIC_API_KEY", "ANTHROPIC_MODEL", "LLM_PROVIDER"):
+        monkeypatch.delenv(name, raising=False)
 
 
 @pytest.fixture()
